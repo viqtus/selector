@@ -15,12 +15,49 @@ var game =
 		}
 	},
 
-	draw: function()
+	draw: function(object)
 	{
+		context.drawImage(object, canvas.width/2 - object.width/2, canvas.height/2 - object.height/2, object.width, object.height);
+	},
 
+	image: function(src)
+	{
+		var image = new Image();
+			image.src = src;
+		return image;
+	},
+
+	images: {},
+
+	load: function(objects)
+	{
+		for(var i = 0; i < objects.length; i++)
+		{
+			var image = new Image();
+				image.src = objects[i].src;
+			game.images[objects[i].name] = image;
+		};
 	},
 
 	mode: 'menu',
+
+	ready: function()
+	{
+		game.canvas.resize();
+	},
+
+	resources:
+	{
+		images:
+		[
+			{name: 'selector', src: 'selector.png'}
+		]
+	},
+
+	show: function()
+	{
+		game.draw(game.images.selector);
+	},
 
 	update: function()
 	{
@@ -28,19 +65,22 @@ var game =
 	}
 };
 
-var image = new Image();
-	image.src = 'selector.png';
+game.load(game.resources.images);
+
+window.console.log(game.resources.images);
 
 window.document.body.appendChild(canvas);
 
 window.onload = function()
 {
-	game.canvas.resize();
-	context.drawImage(image, canvas.width/2 - image.width/2, canvas.height/2 - image.height/2, image.width, image.height);
-	context.scale(2, 2);
+	game.ready();
+	game.update();
+	game.show();
 };
 
 window.onresize = function()
 {
-	game.canvas.resize();
+	game.ready();
+	game.update();
+	game.show();
 };
