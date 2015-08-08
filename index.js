@@ -1,39 +1,84 @@
 var window = window;
 
 var canvas = window.document.createElement('canvas');
-
 var context = canvas.getContext('2d');
+
+var show = function()
+{
+	var cell =
+	{
+		image: this.image,
+		x: this.x,
+		y: this.y
+	};
+	game.stack.push(cell);
+};
 
 var game =
 {
-	animate: false,
-
-	canvas:
+	cycle: function()
 	{
-		resize: function()
+		game.ready();
+		game.update();
+		game.draw();
+	},
+
+	data:
+	{
+		mouse:
 		{
-			canvas.height = window.innerHeight;
-			canvas.width = window.innerWidth;
+			click:
+			{
+				x: undefined,
+				y: undefined
+			},
+			move:
+			{
+				x: undefined,
+				y: undefined
+			}
+		},
+		keyboard:
+		{
+			down:
+			{
+				key: undefined
+			},
+			press:
+			{
+				key: undefined
+			}
 		}
 	},
 
-	cursor:
-	{
-		x: 0,
-		y: 0
-	},
-
-	draw: function(object, x, y)
+	draw: function()
 	{
 		context.beginPath();
-		context.drawImage(object, x, y, object.width, object.height);
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		for(var i = 0; i < game.stack.length; i++)
+		{
+			context.drawImage(game.stack[i].image, game.stack[i].x, game.stack[i].y, game.stack[i].image.width, game.stack[i].image.height);
+		};
 		context.closePath();
 	},
 
-	event:
+	events:
 	{
-		start: 'speach',
-		type: ''
+		mouse:
+		{
+			click: false,
+			move: false
+		},
+		keyboard:
+		{
+			down: false,
+			press: false
+		},
+		window:
+		{
+			load: false,
+			resize: false
+		}
 	},
 
 	image: function(src)
@@ -45,24 +90,36 @@ var game =
 
 	images: {},
 
-	key:
+	initialization()
 	{
-		down: undefined,
-		last: undefined,
-		events:
-		{
-			press: true
-		}
+		game.objects.buttons.play.image = game.images.play;
+		game.objects.logo.image = game.images.selector;
 	},
 
 	lib:
 	{
-		cursor:
+		canvas:
 		{
-			in: function(object)
+			clear:function()
 			{
-				return ((game.cursor.x >= object.x) && (game.cursor.x < object.x + object.w) && (game.cursor.y >= object.y) && (game.cursor.y < object.y + object.h));
+				game.stack = [];
+				context.beginPath();
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				context.closePath();
+			},
+			resize: function()
+			{
+				if(Math.floor(canvas.height) != Math.floor(window.innerHeight))
+				{
+					canvas.height = window.innerHeight;
+					canvas.width = window.innerWidth;
+					window.console.log('event:canvas.resize');//debug
+				};
 			}
+		},
+		cursor: function(type)
+		{
+			canvas.style.cursor = type;
 		},
 		key:
 		{
@@ -83,6 +140,13 @@ var game =
 						return 'up';
 						break;
 				};
+			}
+		},
+		object:
+		{
+			over: function(object)
+			{
+				return ((game.data.mouse.move.x >= object.x) && (game.data.mouse.move.x < object.x + object.image.width) && (game.data.mouse.move.y >= object.y) && (game.data.mouse.move.y < object.y + object.image.height));
 			}
 		}
 	},
@@ -106,70 +170,70 @@ var game =
 		};
 	},
 
-	mode: 'menu',
+	mode: undefined,
 
 	objects:
 	{
-		avatar:
-		{
-			player:
-			{
-				h: 0,
-				w: 0,
-				x: 0,
-				y: 0
-			}
-		},
-		button:
+		buttons:
 		{
 			play:
 			{
-				active: function()
+				active: false,
+				event:
 				{
-					if((game.lib.cursor.in(game.objects.button.play)) && (game.event.type == 'move'))
+					click: function()
 					{
-						canvas.style.cursor = 'pointer';
-						game.draw(game.images.play_active, game.objects.button.play.x, game.objects.button.play.y);
-						if(game.objects.button.play.mouse == 'out')
+						if(game.events.mouse.click)
 						{
-							game.play(game.sounds.active, false, 0.02);
+							if(game.lib.object.over(game.objects.buttons.play))
+							{
+								game.mode = 'play';
+								game.lib.cursor('default');
+								game.play(game.sounds.start, false, 0.2);
+							};
 						};
-						game.objects.button.play.mouse = 'over';
+					},
+					move: function()
+					{
+						if(game.events.mouse.move)
+						{
+							if(game.lib.object.over(game.objects.buttons.play))
+							{
+								if(!game.objects.buttons.play.active)
+								{
+									game.objects.buttons.play.active = true;
+									game.lib.cursor('pointer');
+									game.objects.buttons.play.image = game.images.play_active;
+									game.play(game.sounds.active, false, 0.05);
+								};
+							}
+							else
+							{
+								game.objects.buttons.play.active = false;
+								game.lib.cursor('default');
+								game.objects.buttons.play.image = game.images.play;
+							};
+						};
 					}
-					else
-					{
-						game.objects.button.play.mouse = 'out';
-						canvas.style.cursor = 'default';
-						game.draw(game.images.play, game.objects.button.play.x, game.objects.button.play.y);
-					};
 				},
-				click: function()
-				{
-					if((game.lib.cursor.in(game.objects.button.play)) && (game.event.type == 'click'))
-					{
-						game.play(game.sounds.start, false, 0.2);
-						canvas.style.cursor = 'default';
-						game.soundtrack.pause();
-						game.mode = 'play';
-					};
-				},
-				mouse: 'out',
-				h: 0,
-				w: 0,
-				x: 0,
-				y: 0
+				image: undefined,
+				show: show,
+				x: undefined,
+				y: undefined
 			}
 		},
-		unit:
+		logo:
 		{
-			player:
-			{
-				h: 0,
-				w: 0,
-				x: 0,
-				y: 0
-			}
-		}
+			image: undefined,
+			show: show,
+			x: undefined,
+			y: undefined
+		},
+	},
+
+	options:
+	{
+		volume: 1
 	},
 
 	play: function(audio, loop, volume)
@@ -179,7 +243,7 @@ var game =
 			audio = null;
 		};
 		audio.loop = loop;
-		audio.volume = (volume != undefined) ? volume : 1;
+		audio.volume = (volume != undefined) ? volume*game.options.volume : game.options.volume;
 		audio.play();
 		return audio;
 	},
@@ -194,7 +258,36 @@ var game =
 
 	ready: function()
 	{
-		game.canvas.resize();
+		game.stack = [];
+
+		if(game.events.window.load)
+		{
+			game.lib.canvas.resize();
+		};
+
+		if(game.events.window.resize)
+		{
+			game.lib.canvas.resize();
+		};
+
+		switch(game.mode)
+		{
+			case 'menu':
+				game.objects.logo.x = Math.round(canvas.width/2 - game.objects.logo.image.width/2);
+				game.objects.logo.y = Math.round(canvas.height/5 - game.objects.logo.image.height/2);
+				game.objects.logo.show();
+
+				game.objects.buttons.play.x = Math.round(canvas.width/2 - game.objects.buttons.play.image.width/2);
+				game.objects.buttons.play.y = Math.round(canvas.height/2 - game.objects.buttons.play.image.height/2);
+				game.objects.buttons.play.event.click();
+				game.objects.buttons.play.event.move();
+				game.objects.buttons.play.show();
+			break;
+
+			case 'play':
+
+			break;
+		};
 	},
 
 	resources:
@@ -225,200 +318,80 @@ var game =
 		]
 	},
 
-	show: function()
-	{
-		var h, w, x, y;
-
-		switch(game.mode)
-		{
-			case 'menu':
-				x = canvas.width/2 - game.images.selector.width/2;
-				y = canvas.height/2 - game.images.selector.height*1.5
-				game.draw(game.images.selector, x, y);
-
-				h = game.images.play.height; game.objects.button.play.h = h;
-				w = game.images.play.width; game.objects.button.play.w = w;
-				x = canvas.width/2 - game.images.play.width/2; game.objects.button.play.x = x;
-				y = canvas.height/2; game.objects.button.play.y = y;
-				game.draw(game.images.play, x, y);
-
-				switch(game.event.type)
-				{
-					case 'click':
-						game.objects.button.play.click();
-						break;
-					case 'move':
-						game.objects.button.play.active();
-						break;
-				};
-
-				break;
-			case 'play':
-				x = 0 + Math.round(game.images.mary.width/10);
-				y = canvas.height - Math.round(game.images.mary.height/1.2);
-				game.draw(game.images.mary, x, y);
-
-				switch(game.event.start)
-				{
-					case 'play':
-						x = Math.round(canvas.width/2 - game.images.player.width/2);
-						y = Math.round(canvas.height/2 - game.images.player.height);
-						break;
-
-					case 'speach':
-						x = game.images.mary.width + Math.round(game.images.mary.width/10);
-						y = canvas.height - Math.round(game.images.mary.height/2.2);
-						game.print('Пришло время перекусить', x, y);
-						break;
-				};
-
-				switch(game.event.type)
-				{
-					case 'click':
-						game.event.start = 'play';
-						break;
-				};
-
-				game.play(game.sounds.step, false, 1);
-				switch (game.key.down)
-				{
-					case 'down':
-						x = Math.round(canvas.width/2 - game.images.player.width/2);
-						y = Math.round(canvas.height/2 - game.images.player.height);
-						var image;
-						if(game.key.last == game.key.down)
-						{
-							image = game.images.player_down_run;
-							game.key.last = (!game.event.type == 'move') ? '' : game.key.last;
-						}
-						else
-						{
-							image = game.images.player_down;
-							game.key.last = (!game.event.type == 'move') ? game.key.down : game.key.last;
-						};
-						game.draw(image, x, y);
-						break;
-					case 'left':
-						x = Math.round(canvas.width/2 - game.images.player.width/2);
-						y = Math.round(canvas.height/2 - game.images.player.height);
-						var image;
-
-						if(game.key.last == game.key.down)
-						{
-							image = game.images.player_left_run;
-							if(game.animate)
-							{
-								game.key.last = (game.event.type == 'down') ? '' : game.key.last;
-								game.animate = false;
-							};
-						}
-						else
-						{
-							image = game.images.player_left;
-							if(game.animate)
-							{
-								game.key.last = (game.event.type == 'down') ? game.key.down : game.key.last;
-								game.animate = false;
-							};
-						};
-						game.draw(image, x, y);
-						break;
-					case 'right':
-						x = Math.round(canvas.width/2 - game.images.player_right.width/2);
-						y = Math.round(canvas.height/2 - game.images.player_right.height);
-						var image = (game.key.last == 'right') ? game.images.player_right_run : game.images.player_right;
-						game.draw(image, x, y);
-						break;
-					case 'up':
-						x = Math.round(canvas.width/2 - game.images.player_right.width/2);
-						y = Math.round(canvas.height/2 - game.images.player_right.height);
-						var image = (game.key.last == 'up') ? game.images.player_up : game.images.player_up;
-						game.draw(image, x, y);
-						break;
-					default:
-						x = Math.round(canvas.width/2 - game.images.player.width/2);
-						y = Math.round(canvas.height/2 - game.images.player.height);
-						var image = (game.key.last == 'down') ? game.images.player_down : game.images.player_down;
-						game.draw(image, x, y);
-						break;
-				};
-				break;
-		};
-
-		game.animate = false;
-	},
-
 	sounds: [],
 
 	soundtrack: undefined,
+
+	stack: [],
 
 	update: function()
 	{
 	}
 };
 
-/* load */
+/* preload */
 
 game.load(game.resources.images, 'image');
 game.load(game.resources.sounds, 'audio');
 
 window.document.body.appendChild(canvas);
 
-game.soundtrack = game.play(game.sounds.maintheme, true);
+game.soundtrack = game.play(game.sounds.maintheme, true, 1);
 
 /* events */
 
 window.onclick = function(e)
 {
-	game.cursor.x = e.x;
-	game.cursor.y = e.y;
+	game.data.mouse.click.x = e.x;
+	game.data.mouse.click.y = e.y;
 
-	game.event.type = 'click';
-
-	game.ready();
-	game.update();
-	game.show();
-
-	game.event.type = '';
+	game.events.mouse.click = true;
+	game.cycle();
+	game.events.mouse.click = false;
 };
 
 window.onkeydown = function(e)
 {
-	game.key.down = game.lib.key.event(e.keyCode);
+	game.data.keyboard.down.key = e.keyCode;
 
-	game.event.type = 'down';
+	game.events.keyboard.down = true;
+	game.cycle();
+	game.events.keyboard.down = false;
+};
 
-	game.ready();
-	game.update();
-	game.show();
+window.onkeypress = function(e)
+{
+	game.data.keyboard.press.key = e.keyCode;
 
-	game.event.type = '';
+	game.events.keyboard.press = true;
+	game.cycle();
+	game.events.keyboard.press = false;
 };
 
 window.onload = function()
 {
-	game.ready();
-	game.update();
-	game.show();
+	game.mode = 'menu';
+
+	game.initialization();
+
+	game.events.window.load = true;
+	game.cycle();
+	game.events.window.load = false;
 };
 
 window.onmousemove = function(e)
 {
-	game.cursor.x = e.x;
-	game.cursor.y = e.y;
+	game.data.mouse.move.x = e.x;
+	game.data.mouse.move.y = e.y;
 
-	game.event.type = 'move';
-
-	game.ready();
-	game.update();
-	game.show();
-
-	game.event.type = '';
+	game.events.mouse.move = true;
+	game.cycle();
+	game.events.mouse.move = false;
 };
 
 window.onresize = function()
 {
-	game.ready();
-	game.update();
-	game.show();
+	game.events.window.resize = true;
+	game.cycle();
+	game.events.window.resize = false;
 };
