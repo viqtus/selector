@@ -124,6 +124,10 @@ var game =
 			press: false,
 			up: false
 		},
+		player:
+		{
+			hit: false,
+		},
 		tick: false,
 		window:
 		{
@@ -167,6 +171,10 @@ var game =
 		game.objects.player.animations.run.up_left = [game.images.player_up_left_run, game.images.player_up_left_run_1];
 		game.objects.player.animations.run.up_right = [game.images.player_up_right_run, game.images.player_up_right_run_1];
 		game.objects.player.image = game.images.player;
+
+		game.objects.hud.health.image = game.images.player_hp_3;
+		game.objects.hud.health.x = Math.round(canvas.width/2 - game.objects.hud.health.image.width/2);
+		game.objects.hud.health.y = Math.round(canvas.height/2 - game.objects.player.image.height/2 - game.objects.hud.health.image.height*1.5);
 
 		game.objects.snail.image = game.images.snail_right;
 	},
@@ -381,6 +389,24 @@ var game =
 				show: show,
 				x: undefined,
 				y: undefined
+			},
+			health:
+			{
+				event:
+				{
+					resize: function()
+					{
+						if(game.events.window.resize)
+						{
+							game.objects.hud.health.x = Math.round(canvas.width/2 - game.objects.hud.health.image.width/2);
+							game.objects.hud.health.y = Math.round(canvas.height/2 - game.objects.player.image.height/2 - game.objects.hud.health.image.height*1.5);
+						};
+					}
+				},
+				image: undefined,
+				show: show,
+				x: undefined,
+				y: undefined
 			}
 		},
 		logo:
@@ -464,6 +490,7 @@ var game =
 					{
 						if(game.events.mouse.down)
 						{
+							game.events.player.hit = true;
 							if(game.objects.player.move.vector == 'down')
 							{
 								game.animate('down_hit', game.objects.player, game.objects.player.animations.attack.hit.down, game.options.player.animation.move, game.sounds.hit);
@@ -486,6 +513,7 @@ var game =
 					{
 						if(game.events.mouse.up)
 						{
+							game.events.player.hit = false;
 							if(game.animations.down_hit != undefined)
 							{
 								game.lib.animation.stop('down_hit');
@@ -535,6 +563,8 @@ var game =
 					};
 				}
 			},
+			hp: 3,
+			health: 3,
 			image: undefined,
 			move:
 			{
@@ -602,6 +632,8 @@ var game =
 							};
 						}
 					},
+					hp: 1,
+					health: 1,
 					image: game.objects.snail.image,
 					move:
 					{
@@ -775,6 +807,9 @@ var game =
 
 				game.objects.hud.avatar.event.resize();
 				game.objects.hud.avatar.show();
+
+				game.objects.hud.health.event.resize();
+				game.objects.hud.health.show();
 			break;
 		};
 	},
@@ -783,6 +818,8 @@ var game =
 	{
 		images:
 		[
+			{name: 'hearth', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNvyMY98AAABMSURBVChTrYtJCgAgDAP7Uj/g/8+KkFjBVKk4MJcsRlqpbRVxmE+iQZR7QZbRyQ/HpO9Hokol5o4aKTHfUeMh6hh1GqK+kz6Q89GsA4oeMNja9B5KAAAAAElFTkSuQmCC'},
+
 			{name: 'mary', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAAC0CAMAAAAtvXfoAAAABGdBTUEAALGPC/xhBQAAAwBQTFRFAAAAAwMDBAQECAgIDw8POzw8REAyQEBAaFxOtlFqt1JrtlRs4LzB5dPWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGpb/gQAAAQB0Uk5T////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AFP3ByUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNvyMY98AAANySURBVHhe7dfZbtwwDIXhdN/f/3FTkfgliBZp2Z4UUyv8bkaWuJybAO3L64O+O7b3WviADFlp4QPWD0mGQ2i5JEP2aLlk7ZDsPoXW0zLkFq2nrRuSnZcw4pQM6WHEKRkywpjDMmSEMYetGZI9D2PcIRlyD+MOeX8h/2xw7WLcIRmSaxfjDlkvJPMN8rgoCTF2KkNSEmLs1PohybKLUhdjpzKkoNTF2Km1Q5LhEFoGjJ3KkBUtA8ZOZcgebQNG78qQPdoGjN6VIbdoNRi9K0Nu0WowetdaIZnZyNKvxTdoio7cybvgStFusCKUITVhwZWi3WBFaP2QV9BusCKUIT20G6wIrRuSfcr7o6m+FBwbRhisCGXIDOlhnmLfJYwwWBHKkB5GGKwIZcgt2gesCGXILdoHrAitH/J3wXFXraN9wIpQhqwyZI95qi6u5DtCiaJ9wIpQhhSUKNoHrAhlSEGJon3AilCGFJQo2gesCK0bUtQAmmSi1tE6YEUoQ1YZsse8Rrd3fuJH8auQM08NrQbjd2VInhpaDcbvWjuk3LG7kYCatODKiObMZMitaM7M+iEF+6coz5AZcuZQSOYZPClyhChTtBs8hTJkRZmi3eAplCEryhTtBk+hDFlRpmg3eArdOyTz3X+o8nQJI4yXDuuNDOlhhEE+xXrjviGZ5w4UPF/CCIN8DTGaDOlhhEG2hhjNPUMySzHD4OkyxhhkM4ijMqSHMQa5DOKo+4VkjqJ/wPNp7H5hjMHTgFgZ0mBvhmx4PoWdbkDB84BYGbJh5zsJyTxFr4uSKfY0tLsocUm2DNmj3UWJS7K9v5DMddHuosQl2TJkj3YXJS7JtmZIek+hNURZjIwZktYQZTEy/v8hOarPBb0DSk6jPURZLEOC9hBlsVuGrOg3eDqN9l2U+jIkaN9Fqe/2ITmaJVwdRpvh3WtxJEMWtBnevRZHbhHyY8ExxBzF1WG0Gd69FkcyZEGb4d1rcWSZkIJZbxZS8Km48mXIgjaDp8VC/ms1QP8r5Cz689PUEP2vkLPoz09TQ/S/Qs6iPz9NDdH/CjmL/nzYp4Ljm9iGkG/B5zUZstCEBZ/X3CJkSs8m/xGruJr6UHD8Z4ikMuQjiKTuF3LPtrHSiQdQ3ur5bLj2d/A7FQ44iPIMeY+QZ/TLosVnZEjxTkK+vv4FNdhXBbpDpqQAAAAASUVORK5CYII='},
 
 			{name: 'play', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAoCAYAAAAIeF9DAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNvyMY98AAAE4SURBVGhD7dOxrcJAEIRhEldBQMV0QAXUQG+gSxAajfc8ZmRvMMEnPXGr38HoXZZliUboj3Ge7x/P1+0d58ggzWSQZv4a5P647jbrsXfVb08167F3Rr3PICtmPfbOqPe2Qdg7U93v6VX29Kp7d4/JIKC6d/eYDAKqe3ePySCgunf3mAwCqnt3j8kgoLp395gMAqp7d4/JIKC6d/eYDAKqe3ePySCgunf3GNsgqlmPvat+e6ojekwGWXFEj8kgK47oMbZB2LuqQ8/5/UHtZRDg/P6g9jIIcH5/UHsZBDi/P6i9DAKc3x/UXgYBzu8Pai+DAOf3B7XXdhDVrMfema09FesxGQRs7alYj8kgYGtPxXrMX4OEXwZphg7C/uXiGBmkmQzSTAZpJoM0QweJHuiPcR76Y5xluXwArPXDm9mpJgYAAAAASUVORK5CYII='},
@@ -803,6 +840,10 @@ var game =
 
 			{name: 'player_down_run', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABGCAYAAACt15azAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAe1JREFUaEPtl0FOw1AMRHtCll1xAO6LxA04R4iLHX2mM/WPHZpNn/Q2E3v8xabispeP97dl1GOZH446pPLDwAOz+nofVj6jr9fBwu/Pr4fivNfUwUJ2dBTnvaYOFrKjozjvNXWwkB0dxXmvqYOF7OgozntNHSxkR0dx3mvqYCE7OorzXlMHC9nRUZz3mj5Y+LTDARb/+wOyA9n3tQLdR3Yg+75W1B6QFYezc2vlvofMFs/OrZW9B6zRzawYv4c4t/qY0x+wwpZouanmMB9MYUt/jo6qOcwHU9jSXfHEIWUKWzr/AQUDlUtwoWqgcgkuVA1ULsGFqoHKJWoB88xA5RK1gHlmoHKJWsA8M1C5RC1gnhmoXKIWMM8MVC5RC5hnBirnkJ/jG5hn+prsk6gFzDN9rf6A5Xq9OS5XxB4/o1GLVXc/gGBLHduw0j22YaV7bMNK99iGlZoImzHbsFITYTNmG1ZqImzGbMNKTYTNmG1YqYmwGbMNKzURNmMeRlaM38PDyIrxe3gYWXH2vU12IPveJjuQfe8x/saL3/XXA859QPa9TXYg+94mO5B9b7MAHm+8HnD6Azze8Pg44j+c0OMNv7vh8XE87QG2K0R84xfPNjzej+3OOpL9haZhh5Qj5Qew4qIIm7mThs9zufwAV83dflLzkncAAAAASUVORK5CYII='},
 			{name: 'player_down_run_1', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABGCAYAAACt15azAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwQAADsEBuJFr7QAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAexJREFUaEPtl0FuwzAMBPPCHnvqA/rfAv1B3+FKBmkom13TIp34kgEGKChySeRi9DbL99fHMmplWT8dtUjVTwMXHNXG67DwI9p4Hgz8+/ndFfstJg8GsqWj2G8xeTCQLR3FfovJg4Fs6Sj2W0weDGRLR7HfYvJgIFs6iv0WkwcD2dJR7LeYPBjIlo5iv8XUwcCXLXYw+OkHRAui9xaBzhEtiN5bRO6AKNg92tci5w45Gny0r0XWDmil1SgY313sa+5z+QENNkTDu6oP64MhbOhu6ajqw/pgCBt6CD6wSBnChq4/IKGj6hIcyOqougQHsjqqLsGBrI6qS9QA1iMdVZeoAaxHOqouUQNYj3RUXaIGsB7pqLpEDWA90lF1iRrAeqSj6hzyOV7BeqSNyTyJGsB6pI3lD1g+P1fH4YyYY2s0ajDr9AGEPlSxDAudsQwLnbEMC52xDAvtIqynW4aFdhHW0y3DQrsI6+mWYaFdhPV0y7DQLsJ6umVYaBeJ3tNgsItE72kw2EWi9zLRgui9TLQgei+zu2D8BGc/uxHvA649IFoQvZeJFkTvZaIFC2Dl83gfcPkBlrth5Q3/B8S18nnY3g0rb1x2QP/TRMa31RIt4A4rPyzZs4T6idkiZYmnHcAahQjrmZYWX+dy+wctDPhjWwZNkAAAAABJRU5ErkJggg=='},
+
+			{name: 'player_hp_1', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAMCAYAAAAd3Y8KAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAJFJREFUSEu1zkEKgDAMRFFP6gW8/zoiJlrkp/gRB95mWsIsEfFJJdYtRln3PdwysDQq7cCuh1sGlkqNqgwjp+iWgKVyDzkzjpuhWwKWCo16g24JWCo06g26JWBpVHAcyO94y8DSqNBIkt/xloGl8QyNPeTzFbplYGk8Q6MP+XyFbhlYGl26wRW6ZWBpdPl3eCw7WhCslPqJ72cAAAAASUVORK5CYII='},
+			{name: 'player_hp_2', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAMCAYAAAAd3Y8KAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAJVJREFUSEvFzkEKw0AMQ9GctBfo/dcuoXaqCV9DFoIK3kYT2zmqamtSr3eprn0fmnewVBN7wPWheQfLxSydyJGt1LyB5eK36BtdvpOaN7Bc0NInUvMGlgta+kRq3sBSTXA56M9j8w6WakJHSH8em3ewVPfQsVM/X0nNO1iqe+joqZ+vpOYdLJWLOzhJzTtYKpf//ngdH4ul50VINqGoAAAAAElFTkSuQmCC'},
+			{name: 'player_hp_3', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAMCAYAAAAd3Y8KAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAIpJREFUSEvdjkEOgCAMBHmpH/D/5yrSbQhuMaQhopPMgbKbNgHZdqnVsT8XuQRuzpsH+4YXcOdvH25DUIW66uLqXagzPYP9Hxw+art41GD/u4cD9snUeFl6CliWqfFw32AhpsbXORywcFa/jXYxYN2sfhvR/g1Wyuq3sdzh4KngLQaz+y6zF8f6KR29OiIFaLbwEgAAAABJRU5ErkJggg=='},
 
 			{name: 'player_left', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABGCAYAAACt15azAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwQAADsEBuJFr7QAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC42/Ixj3wAAAhhJREFUaEPt10FOHEEQRNE5oZesOIDvi+QbcI62C1OQ/P4ZVSANvaGlJ7ljMom0ZBC+HcfxKb8ffx1TfZ+ff5aGST2g4twuDTtWXHF+h4YdK604v0PDzix6fvpzKp+4s6JhZ5aMA7ojuLOiYWeW/Bzwc8BlBwyz6PIDOpxf0TCx0orzKxp2rNBwL9HQWFFV/01wN9HQ1LLbv7X6Pr8rvnKEhlTLRnk6YB7Br9HRkGaRlQ93P2AYX3Sn/G4HzL89jxjvtXx+zv2OhmaWz4JZbr7lgPpOdz9ghbuJhoYlCXcTDQ1LEu4mGhqWJNxNNDQsSbibaGhYknA30dCwJOFuoqGpP+lWuJtoaPjjNuFuoqF6eDiGnSNOu4GG6vWAUbA64rQbaNiZBfOAdAh3Oxp2asHqCO52NOywhEdM4zPudjTs1HK6/ID6XfLyLvtGw04tpMsPIO52NExY1OFeR8OERR3udTRMWGS4k2iYsMxwJ9EwYZnhTqJhwjLDnUTDhGWGO4mGCcuI8ysaJiwkzq9omLCQOL+iYcJC4vyKhgkLifMrGiYsJM6vaJiwkDi/omHCQuL8ioZJ/dVrvF9+QJft0jCxMst2aZhYmWW7NFyoz0t2+QH///j21NklDRfqk7ItGi7UJ2VbNDx5/U/HyftMfT7uLmh4YuXD+0x9Pu4uaCjOjx00+H5Lwy1WPthsoOGm7rHZlobf57j9BfbuWsL8MtAtAAAAAElFTkSuQmCC'},
 
