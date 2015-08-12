@@ -247,25 +247,9 @@ var game =
 			window.document.body.style.background = 'url("' + image.src + '")';
 			if(!random)
 			{
-				switch(game.objects.player.move.vector)
-				{
-					case 'down':
-						game.data.background.y -= game.objects.player.move.speed;
-						window.document.body.style.backgroundPosition = game.data.background.x + 'px ' + game.data.background.y + 'px';
-						break;
-					case 'left':
-						game.data.background.x += game.objects.player.move.speed;
-						window.document.body.style.backgroundPosition = game.data.background.x + 'px ' + game.data.background.y + 'px';
-						break;
-					case 'right':
-						game.data.background.x -= game.objects.player.move.speed;
-						window.document.body.style.backgroundPosition = game.data.background.x + 'px ' + game.data.background.y + 'px';
-						break;
-					case 'up':
-						game.data.background.y += game.objects.player.move.speed;
-						window.document.body.style.backgroundPosition = game.data.background.x + 'px ' + game.data.background.y + 'px';
-						break;
-				};
+				game.data.background.x -= game.objects.player.vector.x;
+				game.data.background.y -= game.objects.player.vector.y;
+				window.document.body.style.backgroundPosition = game.data.background.x + 'px ' + game.data.background.y + 'px';
 			}
 			else
 			{
@@ -361,21 +345,8 @@ var game =
 						{
 							if(game.events.keyboard.down)
 							{
-								switch(game.objects.player.move.vector)
-								{
-									case 'down':
-										burger.y -= game.objects.player.move.speed;
-										break;
-									case 'left':
-										burger.x += game.objects.player.move.speed;
-										break;
-									case 'right':
-										burger.x -= game.objects.player.move.speed;
-										break;
-									case 'up':
-										burger.y += game.objects.player.move.speed;
-										break;
-								};
+								burger.x -= game.objects.player.vector.x;
+								burger.y -= game.objects.player.vector.y;
 
 								var x1 = game.objects.player.x + game.objects.player.image.width/2;
 								var x2 = burger.x + burger.image.width/2;
@@ -395,6 +366,14 @@ var game =
 										};
 									};
 								};
+							};
+						},
+						tick: function()
+						{
+							if(game.events.tick)
+							{
+								burger.x -= game.objects.player.vector.x;
+								burger.y -= game.objects.player.vector.y;
 							};
 						}
 					},
@@ -644,8 +623,8 @@ var game =
 						{
 							if(game.timer > 0)
 							{
-								game.timer--;
-								game.print('timer', 'time: ' + game.timer/10, 10, 20, 2, 'red', 'left', true);
+								game.timer -= game.options.clock.interval/100;
+								game.print('timer', 'time: ' + Math.round(game.timer/10), 10, 20, 2, 'red', 'left', true);
 							}
 							else
 							{
@@ -702,36 +681,24 @@ var game =
 			},
 			event:
 			{
-				click: function()
-				{
-				},
 				down: function()
 				{
+					game.objects.player.vector.x = 0;
+					game.objects.player.vector.y = 0;
+					game.objects.player.vector.x = (game.objects.player.move.left) ? game.objects.player.vector.x - game.objects.player.move.speed : game.objects.player.vector.x;
+					game.objects.player.vector.x = (game.objects.player.move.right) ? game.objects.player.vector.x + game.objects.player.move.speed : game.objects.player.vector.x;
+					game.objects.player.vector.y = (game.objects.player.move.down) ? game.objects.player.vector.y + game.objects.player.move.speed : game.objects.player.vector.y;
+					game.objects.player.vector.y = (game.objects.player.move.up) ? game.objects.player.vector.y - game.objects.player.move.speed : game.objects.player.vector.y;
+
 					if(game.events.keyboard.down)
 					{
 						game.objects.player.move[game.lib.key.event(game.data.keyboard.down.key)] = true;
-
+						window.console.log(game.lib.key.event(game.data.keyboard.down.key) + ' : ' + game.objects.player.move[game.lib.key.event(game.data.keyboard.down.key)]);
 						game.lib.background(game.images.grass_1);
 
 						if(game.objects.player.animation == undefined)
 						{
 							game.objects.player.move.vector = game.lib.key.event(game.data.keyboard.down.key);
-						};
-
-						if(game.objects.player.move.vector != game.lib.key.event(game.data.keyboard.down.key))
-						{
-							if(game.objects.player.move.vector != game.objects.player.animation)
-							{
-								switch(game.lib.key.event(game.data.keyboard.down.key))
-								{
-									case 'down':
-										//window.console.log('d');
-										//game.lib.animation.stop(game.objects.player.animation);
-										game.objects.player.move.vector = (game.objects.player.move.left) ? game.lib.key.event(game.data.keyboard.down.key) + '_left' : game.objects.player.move.vector;
-										game.objects.player.move.vector = (game.objects.player.move.right) ? game.lib.key.event(game.data.keyboard.down.key) + '_right' : game.objects.player.move.vector;
-										break;
-								};
-							};
 						};
 
 						game.objects.player.animation = game.objects.player.move.vector;
@@ -740,7 +707,6 @@ var game =
 						{
 							game.animate(game.objects.player.animation, game.objects.player, game.objects.player.animations.run[game.objects.player.animation], game.options.player.animation.move, game.sounds.step);
 						};
-						//window.console.log(game.lib.key.event(game.data.keyboard.down.key));
 					};
 				},
 				mouse:
@@ -796,6 +762,11 @@ var game =
 				{
 					if(game.events.tick)
 					{
+						game.objects.player.vector.x = (game.objects.player.move.left) ? game.objects.player.vector.x - game.objects.player.move.speed : game.objects.player.vector.x;
+						game.objects.player.vector.x = (game.objects.player.move.right) ? game.objects.player.vector.x + game.objects.player.move.speed : game.objects.player.vector.x;
+						game.objects.player.vector.y = (game.objects.player.move.down) ? game.objects.player.vector.y + game.objects.player.move.speed : game.objects.player.vector.y;
+						game.objects.player.vector.y = (game.objects.player.move.up) ? game.objects.player.vector.y - game.objects.player.move.speed : game.objects.player.vector.y;
+						game.lib.background(game.images.grass_1);
 						if(game.objects.player.hp <= 0)
 						{
 							game.mode = 'death';
@@ -807,6 +778,16 @@ var game =
 					if(game.events.keyboard.up)
 					{
 						game.objects.player.move[game.lib.key.event(game.data.keyboard.up.key)] = false;
+
+						for(var animation in game.objects.player.move)
+						{
+							if(!animation)
+							{
+								//game.objects.player.animation = undefined;
+								game.lib.animation.stop(animation);
+							};
+						};
+
 						if(game.objects.player.animation != undefined)
 						{
 							game.lib.animation.stop(game.objects.player.animation);
@@ -843,6 +824,11 @@ var game =
 				vector: undefined
 			},
 			show: show,
+			vector:
+			{
+				x: 0,
+				y: 0
+			},
 			x: undefined,
 			y: undefined
 		},
@@ -854,7 +840,7 @@ var game =
 				{
 					attack:
 					{
-						power: 1,
+						power: 0.5,
 						speed: 0.5
 					},
 					d: 1000,
@@ -864,21 +850,8 @@ var game =
 						{
 							if(game.events.keyboard.down)
 							{
-								switch(game.objects.player.move.vector)
-								{
-									case 'down':
-										snail.y -= game.objects.player.move.speed;
-										break;
-									case 'left':
-										snail.x += game.objects.player.move.speed;
-										break;
-									case 'right':
-										snail.x -= game.objects.player.move.speed;
-										break;
-									case 'up':
-										snail.y += game.objects.player.move.speed;
-										break;
-								};
+								snail.x -= game.objects.player.vector.x;
+								snail.y -= game.objects.player.vector.y;
 							};
 						},
 						mouse:
@@ -899,6 +872,8 @@ var game =
 						{
 							if(game.events.tick)
 							{
+								snail.x -= game.objects.player.vector.x;
+								snail.y -= game.objects.player.vector.y;
 								for(var i = 0; i < game.objects.snails.length; i++)
 								{
 									if(game.objects.snails[i].hp <= 0)
@@ -1026,7 +1001,7 @@ var game =
 			image: undefined,
 			move:
 			{
-				speed: 10
+				speed: 5
 			},
 			show: show,
 			x: undefined,
@@ -1043,7 +1018,7 @@ var game =
 		},
 		clock:
 		{
-			interval: 100
+			interval: 50
 		},
 		font:
 		{
@@ -1179,6 +1154,7 @@ var game =
 					for (var i = 0; i < game.objects.burgers.length; i++)
 					{
 						game.objects.burgers[i].event.down();
+						game.objects.burgers[i].event.tick();
 						game.objects.burgers[i].show();
 					};
 				};
