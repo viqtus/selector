@@ -1365,7 +1365,7 @@ window.oncontextmenu = function(e)
 
 window.onkeydown = function(e)
 {
-	game.data.keyboard.down.key = e.keyCode;
+	game.data.keyboard.down.key = (e.which) ? e.which : e.keyCode;
 
 	game.events.keyboard.down = true;
 	game.cycle();
@@ -1374,7 +1374,7 @@ window.onkeydown = function(e)
 
 window.onkeypress = function(e)
 {
-	game.data.keyboard.press.key = e.keyCode;
+	game.data.keyboard.press.key = (e.which) ? e.which : e.keyCode;
 
 	game.events.keyboard.press = true;
 	game.cycle();
@@ -1383,7 +1383,7 @@ window.onkeypress = function(e)
 
 window.onkeyup = function(e)
 {
-	game.data.keyboard.up.key = e.keyCode;
+	game.data.keyboard.up.key = (e.which) ? e.which : e.keyCode;
 
 	game.events.keyboard.up = true;
 	game.cycle();
