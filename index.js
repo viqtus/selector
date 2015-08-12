@@ -194,7 +194,7 @@ var game =
 
 	images: {},
 
-	initialization()
+	initialization: function()
 	{
 		game.lib.canvas.resize();
 
