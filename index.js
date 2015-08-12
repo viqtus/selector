@@ -897,7 +897,14 @@ var game =
 								var y2 = snail.y + snail.image.height/2;
 								snail.d = Math.pow(Math.pow(game.objects.player.center.x - x2, 2) + Math.pow(game.objects.player.center.y - y2, 2), 0.5);
 
-								if(game.events.player.hit)
+								if
+								(
+									(game.events.player.hit)||
+									(game.animations.down_hit != undefined)||
+									(game.animations.left_hit != undefined)||
+									(game.animations.right_hit != undefined)||
+									(game.animations.up_hit != undefined)
+								)
 								{
 									if(snail.d < (game.objects.player.image.width + game.objects.player.image.height)/2)
 									{
