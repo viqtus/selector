@@ -472,7 +472,6 @@ var game =
 							else
 							{
 								game.objects.buttons.play.active = false;
-								
 								game.objects.buttons.play.image = game.images.play;
 							};
 						};
@@ -693,7 +692,6 @@ var game =
 					if(game.events.keyboard.down)
 					{
 						game.objects.player.move[game.lib.key.event(game.data.keyboard.down.key)] = true;
-						window.console.log(game.lib.key.event(game.data.keyboard.down.key) + ' : ' + game.objects.player.move[game.lib.key.event(game.data.keyboard.down.key)]);
 						game.lib.background(game.images.grass_1);
 
 						if(game.objects.player.animation == undefined)
@@ -770,6 +768,14 @@ var game =
 						if(game.objects.player.hp <= 0)
 						{
 							game.mode = 'death';
+						};
+						for(var animation in game.objects.player.move)
+						{
+							if(!animation)
+							{
+								//game.objects.player.animation = undefined;
+								game.lib.animation.stop(animation);
+							};
 						};
 					};
 				},
@@ -1153,9 +1159,9 @@ var game =
 				{
 					for (var i = 0; i < game.objects.burgers.length; i++)
 					{
-						game.objects.burgers[i].event.down();
 						game.objects.burgers[i].event.tick();
 						game.objects.burgers[i].show();
+						game.objects.burgers[i].event.down();
 					};
 				};
 
@@ -1178,8 +1184,8 @@ var game =
 						game.objects.snails[i].event.down();
 						game.objects.snails[i].event.mouse.down();
 						game.objects.snails[i].event.mouse.up();
-						game.objects.snails[i].event.tick();
 						game.objects.snails[i].show();
+						game.objects.snails[i].event.tick();
 					};
 				};
 
